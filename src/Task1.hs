@@ -41,6 +41,11 @@ class Parse a where
   -- wrapped in 'Maybe' with 'Nothing' indicating failure to parse
   parse :: String -> Maybe a
 
+
+instance Parse Integer where
+  parse s = case reads s of
+    [(n, "")] -> Just n
+    _ -> Nothing
 -- | Parses given expression in Reverse Polish Notation
 -- wrapped in 'Maybe' with 'Nothing' indicating failure to parse
 --

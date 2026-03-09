@@ -2,11 +2,15 @@
 -- The above pragma enables all warnings
 
 {-# LANGUAGE AllowAmbiguousTypes #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TypeApplications #-}
+
+
 
 module Task2 where
 
 import Task1 (Parse, Parse(..))
-
 -- * Expression data type
 
 -- | Generalized representation of expressions comprising
@@ -25,6 +29,15 @@ data IntOp = Add | Mul | Sub
 
 -- * Parsing
 
+-- | Parse instances for Integer and IntOp
+
+
+instance Parse IntOp where
+  parse "+" = Just Add
+  parse "*" = Just Mul
+  parse "-" = Just Sub
+  parse _ = Nothing
+
 -- | Parses given expression in Reverse Polish Notation
 -- wrapped in 'Maybe' with 'Nothing' indicating failure to parse
 --
@@ -42,8 +55,20 @@ data IntOp = Add | Mul | Sub
 -- Nothing
 --
 instance (Parse a, Parse op) => Parse (Expr a op) where
-  parse = error "TODO: define parse (Parse (Expr a op))"
-
+  parse s = go [] (words s)
+    where
+      go [result] [] = Just result
+      go _ [] = Nothing
+      go stack (t:ts) =
+        case parse t of
+          Just op ->
+            case stack of
+              (b:a:rest) -> go (BinOp op a b : rest) ts
+              _ -> Nothing
+          Nothing ->
+            case parse t of
+              Just v  -> go (Lit v : stack) ts
+              Nothing -> go (Var t : stack) ts
 -- * Evaluation
 
 -- | Class of evaluatable types
@@ -64,8 +89,20 @@ class Eval a op where
 -- >>> evalExpr [("x", 3)] (BinOp Add (Lit 2) (Var "y")) :: Maybe Integer
 -- Nothing
 --
+instance Eval Integer IntOp where
+  evalBinOp Add = (+)
+  evalBinOp Mul = (*)
+  evalBinOp Sub = (-)
+
 evalExpr :: (Eval a op) => [(String, a)] -> Expr a op -> Maybe a
-evalExpr = error "TODO: define evalExpr"
+evalExpr _ (Lit v) = Just v
+
+evalExpr env (Var name) = lookup name env
+
+evalExpr env (BinOp op e1 e2) = do
+  v1 <- evalExpr env e1
+  v2 <- evalExpr env e2
+  return (evalBinOp op v1 v2)
 
 -- | Parses given integer expression in Reverse Polish Notation and evaluates it
 -- using given association list of variable values
@@ -89,7 +126,7 @@ evalExpr = error "TODO: define evalExpr"
 -- Nothing
 --
 evaluateInteger :: [(String, Integer)] -> String -> Maybe Integer
-evaluateInteger = error "TODO: define evaluateInteger"
+evaluateInteger = evaluate @_ @IntOp
 
 -- | Parses given expression in Reverse Polish Notation and evaluates it
 -- using given association list of variable values
