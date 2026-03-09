@@ -2,6 +2,7 @@
 -- The above pragma enables all warnings
 
 module Task1 where
+import Data.Maybe (fromJust, isJust) 
 
 -- * Expression data type
 
@@ -28,7 +29,9 @@ data IExpr =
 -- 9
 --
 evalIExpr :: IExpr -> Integer
-evalIExpr = error "TODO: define evalIExpr"
+evalIExpr (Lit n) = n
+evalIExpr (Add e1 e2) = evalIExpr e1 + evalIExpr e2
+evalIExpr (Mul e1 e2) = evalIExpr e1 * evalIExpr e2
 
 -- * Parsing
 
@@ -54,8 +57,19 @@ class Parse a where
 -- >>> parse "2 3" :: Maybe IExpr
 -- Nothing
 --
+
 instance Parse IExpr where
-  parse = error "TODO: define parse (Parse IExpr)"
+  parse expr = parseHelper (words expr) where 
+    parseHelper :: [String] -> Maybe IExpr
+    parseHelper = go []  where
+      go [result] [] = result
+      go _ [] = Nothing
+      go acc (x:xs) = case x of
+        _ | all (`elem` ['0'..'9']) x -> go (acc ++ [Just (Lit (read x))]) xs
+        "+" -> if isJust (last acc) && isJust (last (init acc)) then go (take (length acc - 2) acc ++ [Just (Add (fromJust (last acc)) (fromJust (last (init acc))))]) xs else Nothing
+        "*" -> if isJust (last acc) && isJust (last (init acc)) then go (take (length acc - 2) acc ++ [Just (Mul (fromJust (last acc)) (fromJust (last (init acc))))]) xs else Nothing
+        _ -> Nothing
+
 
 -- * Evaluation with parsing
 
@@ -77,4 +91,16 @@ instance Parse IExpr where
 -- Nothing
 --
 evaluateIExpr :: String -> Maybe Integer
-evaluateIExpr = error "TODO: define evaluateIExpr"
+evaluateIExpr expr = case parsed of
+    Nothing -> Nothing
+    Just (Lit n) -> Just n
+    Just (Add e1 e2) -> Just (simplify e1 + simplify e2)
+    Just (Mul e1 e2) -> Just (simplify e1 * simplify e2)
+  where
+    parsed = parse expr
+    simplify :: IExpr -> Integer 
+    simplify (Lit n) = n
+    simplify (Add e1 e2) = simplify e1 + simplify e2
+    simplify (Mul e1 e2) = simplify e1 * simplify e2
+
+      
