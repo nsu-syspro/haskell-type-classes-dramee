@@ -46,6 +46,11 @@ instance Parse Integer where
   parse s = case reads s of
     [(n, "")] -> Just n
     _ -> Nothing
+
+instance Parse Bool where
+  parse s = case reads s of
+    [(b, "")] -> Just b
+    _ -> Nothing
 -- | Parses given expression in Reverse Polish Notation
 -- wrapped in 'Maybe' with 'Nothing' indicating failure to parse
 --

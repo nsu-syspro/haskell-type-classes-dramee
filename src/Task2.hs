@@ -11,6 +11,7 @@
 module Task2 where
 
 import Task1 (Parse, Parse(..))
+import Data.Bits (Bits(xor))
 -- * Expression data type
 
 -- | Generalized representation of expressions comprising
@@ -93,6 +94,20 @@ instance Eval Integer IntOp where
   evalBinOp Add = (+)
   evalBinOp Mul = (*)
   evalBinOp Sub = (-)
+
+
+data BoolOp = And | Or | Xor
+
+instance Parse BoolOp where
+    parse "and" = Just And
+    parse "or" = Just Or
+    parse "xor" = Just Xor
+    parse _ = Nothing
+
+instance Eval Bool BoolOp where
+  evalBinOp And = (&&)
+  evalBinOp Or = (||)
+  evalBinOp Xor = xor
 
 evalExpr :: (Eval a op) => [(String, a)] -> Expr a op -> Maybe a
 evalExpr _ (Lit v) = Just v
