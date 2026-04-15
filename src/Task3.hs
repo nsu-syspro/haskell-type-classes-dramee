@@ -45,11 +45,8 @@ solveSAT str =
     Just _  -> Just (any (\a -> evaluateBool a str == Just True) assignments)
   where
     vars = nub (getVars str)
-
-    testAssign = zip vars (repeat False)
-
+    testAssign = map (, False) vars
     assignments = map (zip vars) (boolComb (length vars))
-
     boolComb :: Int -> [[Bool]]
     boolComb 0 = [[]]
     boolComb n = [b:bs | b <- [True, False], bs <- boolComb (n-1)]

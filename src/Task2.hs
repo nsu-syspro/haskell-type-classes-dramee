@@ -111,9 +111,7 @@ instance Eval Bool BoolOp where
 
 evalExpr :: (Eval a op) => [(String, a)] -> Expr a op -> Maybe a
 evalExpr _ (Lit v) = Just v
-
 evalExpr env (Var name) = lookup name env
-
 evalExpr env (BinOp op e1 e2) = do
   v1 <- evalExpr env e1
   v2 <- evalExpr env e2
