@@ -3,6 +3,9 @@
 
 module Task3 where
 
+import Task2 (evaluate, BoolOp)
+import Data.List (nub)
+
 -- | Solves SAT problem for given boolean formula written in Reverse Polish Notation
 --
 -- Returns whether given formula is satifiable
@@ -26,5 +29,24 @@ module Task3 where
 -- >>> solveSAT "x xor"
 -- Nothing
 --
+
+
+
+evaluateBool :: [(String, Bool)] -> String -> Maybe Bool
+evaluateBool = evaluate @_ @BoolOp
+
+getVars :: String -> [String]
+getVars = filter (/= "and") . filter (/= "or") . filter (/= "xor") . words
+
 solveSAT :: String -> Maybe Bool
-solveSAT = error "TODO: define solveSAT"
+solveSAT str =
+  case evaluateBool testAssign str of
+    Nothing -> Nothing
+    Just _  -> Just (any (\a -> evaluateBool a str == Just True) assignments)
+  where
+    vars = nub (getVars str)
+    testAssign = map (, False) vars
+    assignments = map (zip vars) (boolComb (length vars))
+    boolComb :: Int -> [[Bool]]
+    boolComb 0 = [[]]
+    boolComb n = [b:bs | b <- [True, False], bs <- boolComb (n-1)]

@@ -2,6 +2,8 @@
 -- The above pragma enables all warnings
 
 module Task1 where
+import Text.Read (readMaybe)
+import Data.Char (isDigit)
 
 -- * Expression data type
 
@@ -28,7 +30,9 @@ data IExpr =
 -- 9
 --
 evalIExpr :: IExpr -> Integer
-evalIExpr = error "TODO: define evalIExpr"
+evalIExpr (Lit n) = n
+evalIExpr (Add e1 e2) = evalIExpr e1 + evalIExpr e2
+evalIExpr (Mul e1 e2) = evalIExpr e1 * evalIExpr e2
 
 -- * Parsing
 
@@ -38,6 +42,12 @@ class Parse a where
   -- wrapped in 'Maybe' with 'Nothing' indicating failure to parse
   parse :: String -> Maybe a
 
+
+instance Parse Integer where
+  parse = readMaybe
+
+instance Parse Bool where
+  parse = readMaybe
 -- | Parses given expression in Reverse Polish Notation
 -- wrapped in 'Maybe' with 'Nothing' indicating failure to parse
 --
@@ -54,12 +64,23 @@ class Parse a where
 -- >>> parse "2 3" :: Maybe IExpr
 -- Nothing
 --
+
 instance Parse IExpr where
-  parse = error "TODO: define parse (Parse IExpr)"
-
--- * Evaluation with parsing
-
--- | Parses given expression in Reverse Polish Notation and evaluates it
+  parse expr = go [] (words expr)
+    where
+      go [result] [] = Just result
+      go _ [] = Nothing
+      go acc@(first : second : other) (x:xs) = case x of
+        _ | all isDigit x -> go ( Lit (read x) : acc) xs
+        "+" -> binaryHelper Add
+        "*" -> binaryHelper Mul
+        _ -> Nothing
+        where
+          binaryHelper :: (IExpr -> IExpr -> IExpr) -> Maybe IExpr
+          binaryHelper op = go (op first second : other) xs
+      go acc (x:xs) = case x of
+        _ | all isDigit x -> go ( Lit (read x) : acc) xs
+        _ -> Nothing
 --
 -- Returns 'Nothing' in case the expression could not be parsed.
 --
@@ -77,4 +98,9 @@ instance Parse IExpr where
 -- Nothing
 --
 evaluateIExpr :: String -> Maybe Integer
-evaluateIExpr = error "TODO: define evaluateIExpr"
+evaluateIExpr expr = case parse expr of
+  Nothing -> Nothing
+  Just e -> Just (evalIExpr e)
+
+
+
