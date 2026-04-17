@@ -2,7 +2,6 @@
 -- The above pragma enables all warnings
 
 module Task1 where
-import Data.Maybe (fromJust, isJust)
 import Text.Read (readMaybe)
 import Data.Char (isDigit)
 
@@ -67,24 +66,21 @@ instance Parse Bool where
 --
 
 instance Parse IExpr where
-  parse expr = go [] (words expr) 
+  parse expr = go [] (words expr)
     where
-      go [result] [] = result
+      go [result] [] = Just result
       go _ [] = Nothing
       go acc@(first : second : other) (x:xs) = case x of
-        _ | all isDigit x -> go (Just (Lit (read x)) : acc) xs
-        "+" -> binaryHelper Add 
-        "*" -> binaryHelper Mul 
+        _ | all isDigit x -> go ( Lit (read x) : acc) xs
+        "+" -> binaryHelper Add
+        "*" -> binaryHelper Mul
         _ -> Nothing
-        where 
+        where
           binaryHelper :: (IExpr -> IExpr -> IExpr) -> Maybe IExpr
-          binaryHelper op = 
-            if isJust first && isJust second 
-              then go (Just (op (fromJust first) (fromJust second)) : other) xs 
-              else Nothing
+          binaryHelper op = go (op first second : other) xs
       go acc (x:xs) = case x of
-        _ | all isDigit x -> go (Just (Lit (read x)) : acc) xs
-        _ -> Nothing 
+        _ | all isDigit x -> go ( Lit (read x) : acc) xs
+        _ -> Nothing
 --
 -- Returns 'Nothing' in case the expression could not be parsed.
 --
